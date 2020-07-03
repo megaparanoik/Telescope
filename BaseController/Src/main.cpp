@@ -1,5 +1,11 @@
 #include "main.h"
 #include "gpio.h"
+#include "drv8825.hpp"
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_ll_utils.h"
+#include "stm32f1xx_ll_rcc.h"
+
+drv8825 *DEC_motor;
 
 void SystemClock_Config(void);
 
@@ -8,9 +14,29 @@ int main(void)
   HAL_Init();
   SystemClock_Config();
   MX_GPIO_Init();
+
+  DEC_motor = new drv8825();
+  DEC_motor->SetupResetPin(GPIOB, GPIO_PIN_15);
+  DEC_motor->SetupSleepPin(GPIOB, GPIO_PIN_14);
+  DEC_motor->SetupEnablePin(GPIOA, GPIO_PIN_11);
+  DEC_motor->SetupDirPin(GPIOB, GPIO_PIN_12);
+  DEC_motor->SetupStepPin(GPIOB, GPIO_PIN_13);
+
+  DEC_motor->SetupM0Pin(GPIOA, GPIO_PIN_10);
+  DEC_motor->SetupM1Pin(GPIOA, GPIO_PIN_9);
+  DEC_motor->SetupM2Pin(GPIOA, GPIO_PIN_8);
+
+  DEC_motor->Reset();
+  DEC_motor->SetSleepMode(drv8825::SLEEP_MODE_WAKE);
+  DEC_motor->SetMicrostep(drv8825::STEP_1_32);
+  DEC_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
+  DEC_motor->Enable();
+  
   
   while(1) {
- 
+    DEC_motor->doStep();
+    LL_mDelay(1);
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
   }
 }
 
