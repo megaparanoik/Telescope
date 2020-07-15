@@ -173,6 +173,13 @@ int drv8825::doStep(void)
 {
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
+    return 0;
+}
 
+int drv8825::doStep(int ms_delay)
+{
+    HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
+    LL_mDelay(1);
+    HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
     return 0;
 }

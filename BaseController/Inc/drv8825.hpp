@@ -2,6 +2,7 @@
 
 #include "stm32f103xb.h"
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_ll_utils.h"
 
 class drv8825
 {
@@ -66,6 +67,7 @@ public:
     int SetSleepMode(int mode);
     int SetDirection(int direction);
     int doStep(void);
+    int doStep(int ms_delay);
 };
 
 
