@@ -1,42 +1,68 @@
 #include "main.h"
 #include "gpio.h"
+#include "tim.h"
 #include "drv8825.hpp"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_rcc.h"
 
+static int STARRY_DAY             = 86164;  //86164,090530833 sec
+static int MOTOR_STEPS_PER_REV    = 200;    //360/1.8deg = 200 steps
+static int GEAR_RATIO             = 3;      //ratio 3:1
+static int PIN_REVOLUTION_PER_DAY = 130;    //
+
 drv8825 *DEC_motor;
+drv8825 *RA_motor;
+
+volatile int schedule_RA_step = 0;
 
 void SystemClock_Config(void);
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+        if(htim->Instance == TIM2) {
+                //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+                schedule_RA_step = 1;
+        }
+}
 
 int main(void)
 {
   HAL_Init();
   SystemClock_Config();
   MX_GPIO_Init();
+  MX_TIM2_Init();
 
-  DEC_motor = new drv8825();
-  DEC_motor->SetupResetPin(GPIOB, GPIO_PIN_15);
-  DEC_motor->SetupSleepPin(GPIOB, GPIO_PIN_14);
-  DEC_motor->SetupEnablePin(GPIOA, GPIO_PIN_11);
-  DEC_motor->SetupDirPin(GPIOB, GPIO_PIN_12);
-  DEC_motor->SetupStepPin(GPIOB, GPIO_PIN_13);
+  RA_motor = new drv8825();
+  RA_motor->SetupResetPin(GPIOB, GPIO_PIN_15);
+  RA_motor->SetupSleepPin(GPIOB, GPIO_PIN_14);
+  RA_motor->SetupEnablePin(GPIOA, GPIO_PIN_11);
+  RA_motor->SetupDirPin(GPIOB, GPIO_PIN_12);
+  RA_motor->SetupStepPin(GPIOB, GPIO_PIN_13);
 
-  DEC_motor->SetupM0Pin(GPIOA, GPIO_PIN_10);
-  DEC_motor->SetupM1Pin(GPIOA, GPIO_PIN_9);
-  DEC_motor->SetupM2Pin(GPIOA, GPIO_PIN_8);
+  RA_motor->SetupM0Pin(GPIOA, GPIO_PIN_10);
+  RA_motor->SetupM1Pin(GPIOA, GPIO_PIN_9);
+  RA_motor->SetupM2Pin(GPIOA, GPIO_PIN_8);
 
-  DEC_motor->Reset();
-  DEC_motor->SetSleepMode(drv8825::SLEEP_MODE_WAKE);
-  DEC_motor->SetMicrostep(drv8825::STEP_1_32);
-  DEC_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
-  DEC_motor->Enable();
+  RA_motor->Reset();
+  RA_motor->SetSleepMode(drv8825::SLEEP_MODE_WAKE);
+  RA_motor->SetMicrostep(drv8825::STEP_1_32);
+  RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
+  //RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
   
+  RA_motor->Enable();
+
+  HAL_TIM_Base_Start_IT(&htim2);
   
+  schedule_RA_step = 0;
+
   while(1) {
-    DEC_motor->doStep();
-    LL_mDelay(1);
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    if (schedule_RA_step != 0) {
+      RA_motor->doStep(1);
+      schedule_RA_step = 0;
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    }
+
   }
 }
 
