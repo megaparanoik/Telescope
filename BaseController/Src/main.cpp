@@ -5,6 +5,7 @@
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_rcc.h"
+#include "Axis.hpp"
 
 static int STARRY_DAY           = 86164;	//86164,090530833 sec
 static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
@@ -19,6 +20,7 @@ extern TIM_HandleTypeDef htim2;
 
 drv8825 *DEC_motor;
 drv8825 *RA_motor;
+Axis *RA_axis;
 
 void SystemClock_Config(void);
 
@@ -57,6 +59,8 @@ int main(void)
   RA_motor->Enable();
 
   HAL_TIM_Base_Start_IT(&htim2);
+
+  RA_axis = new Axis(RA_motor);
 
   //Set_RA_timer_speed(RA_TIMER_MODE_MOVE);
   //Set_RA_timer_speed(RA_TIMER_MODE_TRACKING);

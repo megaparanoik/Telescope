@@ -59,7 +59,9 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_utils.c
 
 CPP_SOURCES =  \
 Src/main.cpp \
-Src/drv8825.cpp
+Src/drv8825.cpp \
+Src/Axis.cpp \
+Src/MotorDriver.cpp
 
 # ASM sources
 ASM_SOURCES =  \
