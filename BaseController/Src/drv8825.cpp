@@ -3,6 +3,7 @@
 
 drv8825::drv8825()
 {
+    step_pin_state = 0;
 }
 
 drv8825::~drv8825()
@@ -172,6 +173,10 @@ int drv8825::SetDirection(int direction)
 int drv8825::doStep(void)
 {
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
+    //10.06us @ 72MHz
+    for(int i = 0; i < 78; ) {
+        i++;
+    }
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
     return 0;
 }
@@ -179,7 +184,20 @@ int drv8825::doStep(void)
 int drv8825::doStep(int ms_delay)
 {
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
-    LL_mDelay(1);
+    LL_mDelay(ms_delay);
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
+    return 0;
+}
+
+int drv8825::ToggleStepPin()
+{
+    if (step_pin_state == 0) {
+        step_pin_state = 1;
+        HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
+    } else {
+        step_pin_state = 0;
+        HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
+    }
+
     return 0;
 }

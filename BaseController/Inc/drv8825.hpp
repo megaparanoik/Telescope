@@ -32,6 +32,8 @@ private:
     GPIO_TypeDef *FAULT_PORT;
     uint16_t FAULT_PIN;
 
+    uint8_t step_pin_state;
+
 public:
     drv8825();
     ~drv8825();
@@ -68,6 +70,7 @@ public:
     int SetDirection(int direction);
     int doStep(void);
     int doStep(int ms_delay);
+    int ToggleStepPin();
 };
 
 
