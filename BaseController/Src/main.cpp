@@ -6,10 +6,13 @@
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_rcc.h"
 
-static int STARRY_DAY             = 86164;  //86164,090530833 sec
-static int MOTOR_STEPS_PER_REV    = 200;    //360/1.8deg = 200 steps
-static int GEAR_RATIO             = 3;      //ratio 3:1
-static int PIN_REVOLUTION_PER_DAY = 130;    //
+static int STARRY_DAY           = 86164;	//86164,090530833 sec
+static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
+static int GEAR_RATIO           = 2;      	//ratio 2:1
+static int RA_RATIO 			= 130;    	//
+static int DEC_RATIO			= 65;		//
+static int MOTOR_STEPS			= 200;		//
+
 
 
 extern TIM_HandleTypeDef htim2;
@@ -55,8 +58,28 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim2);
 
-  while(1) {
+  //Set_RA_timer_speed(RA_TIMER_MODE_MOVE);
+  //Set_RA_timer_speed(RA_TIMER_MODE_TRACKING);
 
+  while(1) {
+	  RA_motor->Disable();
+	  RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
+	  LL_mDelay(1);
+	  RA_motor->Enable();
+	  Set_RA_timer_speed(RA_TIMER_MOVE_SPEED);
+	  LL_mDelay(5000);
+	  Set_RA_timer_speed(RA_TIMER_TRACKING_SPEED);
+	  LL_mDelay(5000);
+
+
+	  RA_motor->Disable();
+	  RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
+	  LL_mDelay(1);
+	  RA_motor->Enable();
+	  Set_RA_timer_speed(RA_TIMER_MOVE_SPEED);
+	  LL_mDelay(5000);
+	  Set_RA_timer_speed(RA_TIMER_TRACKING_SPEED);
+	  LL_mDelay(5000);
   }
 }
 
