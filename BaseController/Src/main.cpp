@@ -11,18 +11,19 @@ static int MOTOR_STEPS_PER_REV    = 200;    //360/1.8deg = 200 steps
 static int GEAR_RATIO             = 3;      //ratio 3:1
 static int PIN_REVOLUTION_PER_DAY = 130;    //
 
+
+extern TIM_HandleTypeDef htim2;
+
 drv8825 *DEC_motor;
 drv8825 *RA_motor;
-
-volatile int schedule_RA_step = 0;
 
 void SystemClock_Config(void);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
         if(htim->Instance == TIM2) {
-                //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-                schedule_RA_step = 1;
+                HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+                RA_motor->ToggleStepPin();
         }
 }
 
@@ -47,21 +48,19 @@ int main(void)
   RA_motor->Reset();
   RA_motor->SetSleepMode(drv8825::SLEEP_MODE_WAKE);
   RA_motor->SetMicrostep(drv8825::STEP_1_32);
-  RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
-  //RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
+  //RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
+  RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
   
   RA_motor->Enable();
 
   HAL_TIM_Base_Start_IT(&htim2);
-  
-  schedule_RA_step = 0;
 
   while(1) {
-    if (schedule_RA_step != 0) {
-      RA_motor->doStep(1);
-      schedule_RA_step = 0;
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    }
+    //if (schedule_RA_step != 0) {
+    //  RA_motor->doStep();
+    //  schedule_RA_step = 0;
+    //  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    //}
 
   }
 }
