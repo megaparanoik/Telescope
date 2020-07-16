@@ -191,13 +191,6 @@ int drv8825::doStep(int ms_delay)
 
 int drv8825::ToggleStepPin()
 {
-    if (step_pin_state == 0) {
-        step_pin_state = 1;
-        HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
-    } else {
-        step_pin_state = 0;
-        HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_RESET); //Step - 0 
-    }
-
+    HAL_GPIO_TogglePin(Step_PORT, Step_PIN);
     return 0;
 }

@@ -21,10 +21,10 @@ void SystemClock_Config(void);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-        if(htim->Instance == TIM2) {
-                HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-                RA_motor->ToggleStepPin();
-        }
+	if(htim->Instance == TIM2) {
+		RA_motor->ToggleStepPin();
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);                
+  	}
 }
 
 int main(void)
@@ -56,11 +56,6 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
 
   while(1) {
-    //if (schedule_RA_step != 0) {
-    //  RA_motor->doStep();
-    //  schedule_RA_step = 0;
-    //  HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    //}
 
   }
 }
