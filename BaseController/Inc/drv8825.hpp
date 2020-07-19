@@ -3,8 +3,9 @@
 #include "stm32f103xb.h"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_ll_utils.h"
+#include "IMotorDriver.hpp"
 
-class drv8825
+class drv8825 : public IMotorDriver
 {
 private:
     GPIO_TypeDef *Reset_PORT;
@@ -32,45 +33,23 @@ private:
     GPIO_TypeDef *FAULT_PORT;
     uint16_t FAULT_PIN;
 
-    uint8_t step_pin_state;
+    double resolution = 0.7788461538;
 
 public:
     drv8825();
+    drv8825(struct MotorDriverPins *pins);
     ~drv8825();
 
-    static const int SLEEP_MODE_SLEEP   = 0;
-    static const int SLEEP_MODE_WAKE    = 1;
-
-    static const int STEP_1_1   = 1;
-    static const int STEP_1_2   = 2;
-    static const int STEP_1_4   = 4;
-    static const int STEP_1_8   = 8;
-    static const int STEP_1_16  = 16;
-    static const int STEP_1_32  = 32;
-
-    static const int DIRECTION_CLOCKWISE            = 0;
-    static const int DIRECTION_COUNTERCLOCKWISE     = 1;
-
-
-
-    int SetupResetPin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupSleepPin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupEnablePin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupDirPin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupStepPin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupM0Pin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupM1Pin(GPIO_TypeDef *Port, uint16_t Pin);
-    int SetupM2Pin(GPIO_TypeDef *Port, uint16_t Pin);
-
-    int SetMicrostep(int microstep);
     int Reset(void);
     int Enable(void);
     int Disable(void);
     int SetSleepMode(int mode);
     int SetDirection(int direction);
-    int doStep(void);
+    int SetMicrostep(int microstep);
+    int doStep();
     int doStep(int ms_delay);
     int ToggleStepPin();
+    double GetResolution();
 };
 
 

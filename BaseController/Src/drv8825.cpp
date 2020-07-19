@@ -3,67 +3,30 @@
 
 drv8825::drv8825()
 {
-    step_pin_state = 0;
+}
+
+drv8825::drv8825(struct MotorDriverPins *pins)
+{
+    Reset_PORT  = pins->Reset_PORT;
+    Reset_PIN   = pins->Reset_PIN;
+    Sleep_PORT  = pins->Sleep_PORT;
+    Sleep_PIN   = pins->Sleep_PIN;
+    Enable_PORT = pins->Enable_PORT;
+    Enable_PIN  = pins->Enable_PIN;
+    Dir_PORT    = pins->Dir_PORT;
+    Dir_PIN     = pins->Dir_PIN;
+    Step_PORT   = pins->Step_PORT;
+    Step_PIN    = pins->Step_PIN;
+    M0_PORT     = pins->M0_PORT;
+    M0_PIN      = pins->M0_PIN;
+    M1_PORT     = pins->M1_PORT;
+    M1_PIN      = pins->M1_PIN;
+    M2_PORT     = pins->M2_PORT;
+    M2_PIN      = pins->M2_PIN; 
 }
 
 drv8825::~drv8825()
 {
-}
-
-int drv8825::SetupResetPin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    Reset_PORT = Port;
-    Reset_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupSleepPin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    Sleep_PORT = Port;
-    Sleep_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupEnablePin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    Enable_PORT = Port;
-    Enable_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupDirPin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    Dir_PORT = Port;
-    Dir_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupStepPin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    Step_PORT = Port;
-    Step_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupM0Pin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    M0_PORT = Port;
-    M0_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupM1Pin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    M1_PORT = Port;
-    M1_PIN = Pin;
-    return 0;
-}
-
-int drv8825::SetupM2Pin(GPIO_TypeDef *Port, uint16_t Pin)
-{
-    M2_PORT = Port;
-    M2_PIN = Pin;
-    return 0;
 }
 
 int drv8825::SetMicrostep(int microstep)
@@ -170,7 +133,7 @@ int drv8825::SetDirection(int direction)
     return 0;
 }
 
-int drv8825::doStep(void)
+int drv8825::doStep()
 {
     HAL_GPIO_WritePin(Step_PORT, Step_PIN, GPIO_PIN_SET);   //Step - 1
     //10.06us @ 72MHz
@@ -193,4 +156,9 @@ int drv8825::ToggleStepPin()
 {
     HAL_GPIO_TogglePin(Step_PORT, Step_PIN);
     return 0;
+}
+
+double drv8825::GetResolution()
+{
+    return resolution;
 }

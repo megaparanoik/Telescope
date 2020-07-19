@@ -1,90 +1,76 @@
 #include "main.h"
 #include "gpio.h"
 #include "tim.h"
-#include "drv8825.hpp"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_rcc.h"
 #include "Axis.hpp"
+#include "IMotorDriver.hpp"
 
-static int STARRY_DAY           = 86164;	//86164,090530833 sec
+static int STARRY_DAY           = 86164;	  //86164,090530833 sec
 static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
 static int GEAR_RATIO           = 2;      	//ratio 2:1
 static int RA_RATIO 			= 130;    	//
-static int DEC_RATIO			= 65;		//
-static int MOTOR_STEPS			= 200;		//
+static int DEC_RATIO			= 65;		    //
+static int MOTOR_STEPS			= 200;		  //
 
 
 
 extern TIM_HandleTypeDef htim2;
-
-drv8825 *DEC_motor;
-drv8825 *RA_motor;
+struct MotorDriverPins RA_Motor_pins;
 Axis *RA_axis;
+
 
 void SystemClock_Config(void);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+
 	if(htim->Instance == TIM2) {
-		RA_motor->ToggleStepPin();
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);                
+    	if (RA_axis) {
+      		RA_axis->TimerInterrupt();
+    	}	
   	}
 }
 
 int main(void)
 {
-  HAL_Init();
-  SystemClock_Config();
-  MX_GPIO_Init();
-  MX_TIM2_Init();
+  	HAL_Init();
+  	SystemClock_Config();
+  	MX_GPIO_Init();
+  	MX_TIM2_Init();
 
-  RA_motor = new drv8825();
-  RA_motor->SetupResetPin(GPIOB, GPIO_PIN_15);
-  RA_motor->SetupSleepPin(GPIOB, GPIO_PIN_14);
-  RA_motor->SetupEnablePin(GPIOA, GPIO_PIN_11);
-  RA_motor->SetupDirPin(GPIOB, GPIO_PIN_12);
-  RA_motor->SetupStepPin(GPIOB, GPIO_PIN_13);
+  	RA_Motor_pins.Reset_PORT  = GPIOB;
+  	RA_Motor_pins.Reset_PIN   = GPIO_PIN_15;
+  	RA_Motor_pins.Sleep_PORT  = GPIOB;
+  	RA_Motor_pins.Sleep_PIN   = GPIO_PIN_14;
+  	RA_Motor_pins.Step_PORT   = GPIOB;
+  	RA_Motor_pins.Step_PIN    = GPIO_PIN_13;
+	RA_Motor_pins.Dir_PORT    = GPIOB;
+  	RA_Motor_pins.Dir_PIN     = GPIO_PIN_12;
 
-  RA_motor->SetupM0Pin(GPIOA, GPIO_PIN_10);
-  RA_motor->SetupM1Pin(GPIOA, GPIO_PIN_9);
-  RA_motor->SetupM2Pin(GPIOA, GPIO_PIN_8);
+	RA_Motor_pins.Enable_PORT = GPIOA;
+  	RA_Motor_pins.Enable_PIN  = GPIO_PIN_11;
+  	RA_Motor_pins.M0_PORT     = GPIOA;
+  	RA_Motor_pins.M0_PIN      = GPIO_PIN_10;
+  	RA_Motor_pins.M1_PORT     = GPIOA;
+  	RA_Motor_pins.M1_PIN      = GPIO_PIN_9;
+  	RA_Motor_pins.M2_PORT     = GPIOA;
+  	RA_Motor_pins.M2_PIN      = GPIO_PIN_8;
 
-  RA_motor->Reset();
-  RA_motor->SetSleepMode(drv8825::SLEEP_MODE_WAKE);
-  RA_motor->SetMicrostep(drv8825::STEP_1_32);
-  //RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
-  RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
-  
-  RA_motor->Enable();
+	RA_axis = new Axis(&htim2, &RA_Motor_pins);
 
-  HAL_TIM_Base_Start_IT(&htim2);
+	while(1) {
+		RA_axis->GoTo(10000);
+		LL_mDelay(5000);
 
-  RA_axis = new Axis(RA_motor);
+		RA_axis->GoTo(20000);
+		LL_mDelay(5000);
 
-  //Set_RA_timer_speed(RA_TIMER_MODE_MOVE);
-  //Set_RA_timer_speed(RA_TIMER_MODE_TRACKING);
-
-  while(1) {
-	  RA_motor->Disable();
-	  RA_motor->SetDirection(drv8825::DIRECTION_CLOCKWISE);
-	  LL_mDelay(1);
-	  RA_motor->Enable();
-	  Set_RA_timer_speed(RA_TIMER_MOVE_SPEED);
-	  LL_mDelay(5000);
-	  Set_RA_timer_speed(RA_TIMER_TRACKING_SPEED);
-	  LL_mDelay(5000);
-
-
-	  RA_motor->Disable();
-	  RA_motor->SetDirection(drv8825::DIRECTION_COUNTERCLOCKWISE);
-	  LL_mDelay(1);
-	  RA_motor->Enable();
-	  Set_RA_timer_speed(RA_TIMER_MOVE_SPEED);
-	  LL_mDelay(5000);
-	  Set_RA_timer_speed(RA_TIMER_TRACKING_SPEED);
-	  LL_mDelay(5000);
-  }
+		RA_axis->GoTo(50000);
+		LL_mDelay(5000);	
+  	}
 }
 
 void SystemClock_Config(void)
