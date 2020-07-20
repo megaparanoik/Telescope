@@ -8,6 +8,7 @@
 #include "stm32f1xx_ll_rcc.h"
 #include "Axis.hpp"
 #include "IMotorDriver.hpp"
+#include "Logger.hpp"
 
 static int STARRY_DAY           = 86164;	//86164,090530833 sec
 static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
@@ -58,6 +59,7 @@ void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
 
 int main(void)
 {
+	
   	HAL_Init();
   	SystemClock_Config();
   	MX_GPIO_Init();
@@ -65,6 +67,10 @@ int main(void)
 	MX_TIM3_Init();
 	MX_DMA_Init();
 	MX_USART3_UART_Init();
+
+	Logger &logger = Logger::GetInstance();
+	logger.Init(&huart3);
+	logger.Write("Debug message %d", 34);
 
 	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
@@ -104,16 +110,9 @@ int main(void)
 	RA_axis  = new Axis(&htim2, RA_Motor_pins);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins);
 
-	char *text = "Hello World\n\r";
-
-	while(1) {
-		//HAL_UART_Transmit_IT(&huart3, (uint8_t *)text, 13);
-		HAL_UART_Transmit_DMA(&huart3, (uint8_t *)text, 13);
-		//HAL_UART_Transmit(&huart3, (uint8_t *)text, 13, 100);
-		
-		
+	while(1) {	
 		//DEC_axis->GoTo_arcsec(10000);
-		LL_mDelay(1000);
+		//LL_mDelay(1000);
 
 		//DEC_axis->GoTo_arcsec(20000);
 		//LL_mDelay(1000);
