@@ -18,6 +18,7 @@ public:
     }
 
     int Init(UART_HandleTypeDef *huart);
-    int Write(char *message, ...);    
+    int Write(char *message, ...);
+    int write(char *message, ...);
 };
 

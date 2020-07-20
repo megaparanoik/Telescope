@@ -27,3 +27,19 @@ int Logger::Write(char *message, ...)
 
     return 0;
 }
+
+int Logger::write(char *message, ...)
+{
+    char buf[250];
+    int len;
+
+    va_list argptr;
+    va_start(argptr, message);
+    len = vsnprintf(buf, 250, message, argptr);
+    buf[len] = '\n';
+    buf[len+1] = '\r';
+
+    HAL_UART_Transmit(uart_device, (uint8_t *)buf, len + 2, 1000);
+
+    return 0;
+}
