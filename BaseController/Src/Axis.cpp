@@ -12,7 +12,6 @@ Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[])
     axis_motor->SetMicrostep(IMotorDriver::STEP_1_32);
     axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
     axis_motor->SetSleepMode(IMotorDriver::SLEEP_MODE_WAKE);
-    axis_motor->Enable();
 
     current_arcsec  = 0;
     delta           = 0;
@@ -59,12 +58,14 @@ int Axis::GoTo_degree(double degree)
 
 int Axis::Start()
 {
+    axis_motor->Enable();
     HAL_TIM_Base_Start_IT(axis_timer);
     return 0;
 }
 
 int Axis::Stop()
 {
+    axis_motor->Disable();
     HAL_TIM_Base_Stop_IT(axis_timer);
     return 0;
 }
