@@ -1,6 +1,8 @@
 #include "main.h"
 #include "gpio.h"
 #include "tim.h"
+#include "usart.h"
+#include "dma.h"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_rcc.h"
@@ -15,6 +17,7 @@ static int DEC_RATIO			= 65;		//
 static int MOTOR_STEPS			= 200;		//
 
 
+extern UART_HandleTypeDef huart3;
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
@@ -35,11 +38,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       		RA_axis->TimerInterrupt();
     	}	
   	} else if(htim->Instance == TIM3) {
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     	if (DEC_axis) {
       		DEC_axis->TimerInterrupt();
     	}	
   	} 
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart3) {
+    }
+}
+
+void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart3) {
+    }
 }
 
 int main(void)
@@ -49,6 +63,8 @@ int main(void)
   	MX_GPIO_Init();
   	MX_TIM2_Init();
 	MX_TIM3_Init();
+	MX_DMA_Init();
+	MX_USART3_UART_Init();
 
 	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
@@ -88,12 +104,19 @@ int main(void)
 	RA_axis  = new Axis(&htim2, RA_Motor_pins);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins);
 
+	char *text = "Hello World\n\r";
+
 	while(1) {
-		DEC_axis->GoTo_arcsec(10000);
+		//HAL_UART_Transmit_IT(&huart3, (uint8_t *)text, 13);
+		HAL_UART_Transmit_DMA(&huart3, (uint8_t *)text, 13);
+		//HAL_UART_Transmit(&huart3, (uint8_t *)text, 13, 100);
+		
+		
+		//DEC_axis->GoTo_arcsec(10000);
 		LL_mDelay(1000);
 
-		DEC_axis->GoTo_arcsec(20000);
-		LL_mDelay(1000);
+		//DEC_axis->GoTo_arcsec(20000);
+		//LL_mDelay(1000);
 
 		//DEC_axis->GoTo_arcsec(50000);
 		//LL_mDelay(5000);	

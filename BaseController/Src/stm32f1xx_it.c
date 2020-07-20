@@ -4,6 +4,9 @@
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
+extern DMA_HandleTypeDef hdma_usart3_tx;
+extern UART_HandleTypeDef huart3;
+
 void NMI_Handler(void)
 {
 
@@ -69,4 +72,14 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&htim3);
+}
+
+void DMA1_Channel2_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart3_tx);
+}
+
+void USART3_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart3);
 }
