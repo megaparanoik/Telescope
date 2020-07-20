@@ -2,6 +2,7 @@
 #include "stm32f1xx_it.h"
 
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 
 void NMI_Handler(void)
 {
@@ -63,4 +64,9 @@ void SysTick_Handler(void)
 void TIM2_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&htim2);
+}
+
+void TIM3_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim3);
 }
