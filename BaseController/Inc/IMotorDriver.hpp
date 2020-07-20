@@ -23,6 +23,26 @@ struct MotorDriverPins
     uint16_t FAULT_PIN;
 };
 
+struct ControlPin
+{
+    GPIO_TypeDef *PORT;
+    uint16_t PIN;
+};
+
+enum ControlPinNames
+{
+    RESET_control_pin = 0,
+    SLEEP_control_pin,
+    ENABLE_control_pin,
+    DIR_control_pin,
+    STEP_control_pin,
+    M0_control_pin,
+    M1_control_pin,
+    M2_control_pin,
+    FAULT_control_pin,
+    MAX_control_pin,
+};
+
 
 class IMotorDriver
 {

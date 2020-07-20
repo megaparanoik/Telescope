@@ -7,7 +7,10 @@
 class Axis
 {
 private:
-    static long int arcsec_max;
+    static const int DECLINATION_MIN  = 0;  //degrees
+    static const int DECLINATION_MAX  = 90; //degrees
+
+    static int arcsec_max;
     TIM_HandleTypeDef *axis_timer;
     IMotorDriver *axis_motor;
 
@@ -18,10 +21,11 @@ private:
 
 
 public:
-    Axis(TIM_HandleTypeDef *timer, struct MotorDriverPins *pins);
+    Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[]);
     ~Axis();
 
-    int GoTo(int arcsec);
+    int GoTo_arcsec(int arcsec);
+    int GoTo_degree(double degree);
     int Start();
     int Stop();
     int TimerInterrupt();

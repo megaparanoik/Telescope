@@ -1,7 +1,7 @@
 #include "Axis.hpp"
 
 
-Axis::Axis(TIM_HandleTypeDef *timer, struct MotorDriverPins *pins)
+Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[])
 {
     axis_timer = timer;
     axis_motor = new drv8825(pins);
@@ -24,7 +24,7 @@ Axis::~Axis()
 {
 }
 
-int Axis::GoTo(int arcsec)
+int Axis::GoTo_arcsec(int arcsec)
 {
     target_arcsec = arcsec;
     delta = current_arcsec - target_arcsec;
@@ -47,6 +47,12 @@ int Axis::GoTo(int arcsec)
         Set_timer_speed(axis_timer, TIMER_MOVE_SPEED);
         Start();
     }
+
+    return 0;
+}
+
+int Axis::GoTo_degree(double degree)
+{
 
     return 0;
 }

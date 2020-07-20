@@ -7,31 +7,39 @@
 #include "Axis.hpp"
 #include "IMotorDriver.hpp"
 
-static int STARRY_DAY           = 86164;	  //86164,090530833 sec
+static int STARRY_DAY           = 86164;	//86164,090530833 sec
 static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
 static int GEAR_RATIO           = 2;      	//ratio 2:1
 static int RA_RATIO 			= 130;    	//
-static int DEC_RATIO			= 65;		    //
-static int MOTOR_STEPS			= 200;		  //
+static int DEC_RATIO			= 65;		//
+static int MOTOR_STEPS			= 200;		//
 
 
 
 extern TIM_HandleTypeDef htim2;
-struct MotorDriverPins RA_Motor_pins;
+extern TIM_HandleTypeDef htim3;
 Axis *RA_axis;
+Axis *DEC_axis;
 
+struct ControlPin RA_Motor_pins[MAX_control_pin] = {0};
+struct ControlPin DEC_Motor_pins[MAX_control_pin] = {0};
 
 void SystemClock_Config(void);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	
 
 	if(htim->Instance == TIM2) {
     	if (RA_axis) {
       		RA_axis->TimerInterrupt();
     	}	
-  	}
+  	} else if(htim->Instance == TIM3) {
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+    	if (DEC_axis) {
+      		DEC_axis->TimerInterrupt();
+    	}	
+  	} 
 }
 
 int main(void)
@@ -40,36 +48,55 @@ int main(void)
   	SystemClock_Config();
   	MX_GPIO_Init();
   	MX_TIM2_Init();
+	MX_TIM3_Init();
 
-  	RA_Motor_pins.Reset_PORT  = GPIOB;
-  	RA_Motor_pins.Reset_PIN   = GPIO_PIN_15;
-  	RA_Motor_pins.Sleep_PORT  = GPIOB;
-  	RA_Motor_pins.Sleep_PIN   = GPIO_PIN_14;
-  	RA_Motor_pins.Step_PORT   = GPIOB;
-  	RA_Motor_pins.Step_PIN    = GPIO_PIN_13;
-	RA_Motor_pins.Dir_PORT    = GPIOB;
-  	RA_Motor_pins.Dir_PIN     = GPIO_PIN_12;
+	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
+	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
+	RA_Motor_pins[SLEEP_control_pin].PORT 	= GPIOB;
+	RA_Motor_pins[SLEEP_control_pin].PIN 	= GPIO_PIN_14;
+	RA_Motor_pins[STEP_control_pin].PORT 	= GPIOB;
+	RA_Motor_pins[STEP_control_pin].PIN 	= GPIO_PIN_13;
+	RA_Motor_pins[DIR_control_pin].PORT 	= GPIOB;
+	RA_Motor_pins[DIR_control_pin].PIN 		= GPIO_PIN_12;
+	RA_Motor_pins[ENABLE_control_pin].PORT 	= GPIOA;
+	RA_Motor_pins[ENABLE_control_pin].PIN 	= GPIO_PIN_11;
+	RA_Motor_pins[M0_control_pin].PORT 		= GPIOA;
+	RA_Motor_pins[M0_control_pin].PIN 		= GPIO_PIN_10;
+	RA_Motor_pins[M1_control_pin].PORT 		= GPIOA;
+	RA_Motor_pins[M1_control_pin].PIN 		= GPIO_PIN_9;
+	RA_Motor_pins[M2_control_pin].PORT 		= GPIOA;
+	RA_Motor_pins[M2_control_pin].PIN 		= GPIO_PIN_8;
 
-	RA_Motor_pins.Enable_PORT = GPIOA;
-  	RA_Motor_pins.Enable_PIN  = GPIO_PIN_11;
-  	RA_Motor_pins.M0_PORT     = GPIOA;
-  	RA_Motor_pins.M0_PIN      = GPIO_PIN_10;
-  	RA_Motor_pins.M1_PORT     = GPIOA;
-  	RA_Motor_pins.M1_PIN      = GPIO_PIN_9;
-  	RA_Motor_pins.M2_PORT     = GPIOA;
-  	RA_Motor_pins.M2_PIN      = GPIO_PIN_8;
+	
+	DEC_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
+	DEC_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_4;
+	DEC_Motor_pins[SLEEP_control_pin].PORT 	= GPIOB;
+	DEC_Motor_pins[SLEEP_control_pin].PIN 	= GPIO_PIN_3;
+	DEC_Motor_pins[STEP_control_pin].PORT 	= GPIOA;
+	DEC_Motor_pins[STEP_control_pin].PIN 	= GPIO_PIN_15;
+	DEC_Motor_pins[DIR_control_pin].PORT 	= GPIOA;
+	DEC_Motor_pins[DIR_control_pin].PIN		= GPIO_PIN_12;
+	DEC_Motor_pins[ENABLE_control_pin].PORT	= GPIOB;
+	DEC_Motor_pins[ENABLE_control_pin].PIN 	= GPIO_PIN_9;
+	DEC_Motor_pins[M0_control_pin].PORT 	= GPIOB;
+	DEC_Motor_pins[M0_control_pin].PIN 		= GPIO_PIN_8;
+	DEC_Motor_pins[M1_control_pin].PORT 	= GPIOB;
+	DEC_Motor_pins[M1_control_pin].PIN 		= GPIO_PIN_7;
+	DEC_Motor_pins[M2_control_pin].PORT 	= GPIOB;
+	DEC_Motor_pins[M2_control_pin].PIN 		= GPIO_PIN_6;
 
-	RA_axis = new Axis(&htim2, &RA_Motor_pins);
+	RA_axis  = new Axis(&htim2, RA_Motor_pins);
+	DEC_axis = new Axis(&htim3, DEC_Motor_pins);
 
 	while(1) {
-		RA_axis->GoTo(10000);
-		LL_mDelay(5000);
+		DEC_axis->GoTo_arcsec(10000);
+		LL_mDelay(1000);
 
-		RA_axis->GoTo(20000);
-		LL_mDelay(5000);
+		DEC_axis->GoTo_arcsec(20000);
+		LL_mDelay(1000);
 
-		RA_axis->GoTo(50000);
-		LL_mDelay(5000);	
+		//DEC_axis->GoTo_arcsec(50000);
+		//LL_mDelay(5000);	
   	}
 }
 
