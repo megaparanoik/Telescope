@@ -79,4 +79,5 @@ int Axis::TimerInterrupt()
         current_arcsec = target_arcsec;
         Stop();
     }
+    return 0;
 }
