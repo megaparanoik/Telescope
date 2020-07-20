@@ -1,8 +1,9 @@
 #include "Axis.hpp"
+#include "Logger.hpp"
 
-
-Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[])
+Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
 {
+    this->axis_type = axis_type;
     axis_timer = timer;
     axis_motor = new drv8825(pins);
 
@@ -25,8 +26,15 @@ Axis::~Axis()
 
 int Axis::GoTo_arcsec(int arcsec)
 {
+    Logger &logger = Logger::GetInstance();
+
+    logger.write("Goto %d arces", arcsec);
+
     target_arcsec = arcsec;
     delta = current_arcsec - target_arcsec;
+
+    logger.write("Delta: %d", delta);
+
     if (delta > 0) {
         axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
     } else if (delta < 0) {
@@ -36,10 +44,15 @@ int Axis::GoTo_arcsec(int arcsec)
     }
 
     remains_steps = delta / axis_motor->GetResolution();
+
+    logger.write("Remains steps: %d", remains_steps);
+
     if (remains_steps < 0) {
         remains_steps *= -1;
     }
     remains_steps *= 2;
+
+    logger.write("Remains steps: %d", remains_steps);
 
     if (remains_steps != 0) {
         //Set_timer_speed(axis_timer, TIMER_TRACKING_SPEED);

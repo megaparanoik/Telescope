@@ -70,7 +70,9 @@ int main(void)
 
 	Logger &logger = Logger::GetInstance();
 	logger.Init(&huart3);
-	logger.Write("Debug message %d", 34);
+
+
+	logger.Write("Telescope App");
 
 	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
@@ -107,15 +109,15 @@ int main(void)
 	DEC_Motor_pins[M2_control_pin].PORT 	= GPIOB;
 	DEC_Motor_pins[M2_control_pin].PIN 		= GPIO_PIN_6;
 
-	RA_axis  = new Axis(&htim2, RA_Motor_pins);
-	DEC_axis = new Axis(&htim3, DEC_Motor_pins);
+	RA_axis  = new Axis(&htim2, RA_Motor_pins, Axis::AXIS_TYPE_RA);
+	DEC_axis = new Axis(&htim3, DEC_Motor_pins, Axis::AXIS_TYPE_DEC);
 
 	while(1) {	
-		//DEC_axis->GoTo_arcsec(10000);
-		//LL_mDelay(1000);
+		DEC_axis->GoTo_arcsec(10000);
+		LL_mDelay(5000);
 
-		//DEC_axis->GoTo_arcsec(20000);
-		//LL_mDelay(1000);
+		DEC_axis->GoTo_arcsec(20000);
+		LL_mDelay(5000);
 
 		//DEC_axis->GoTo_arcsec(50000);
 		//LL_mDelay(5000);	

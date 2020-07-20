@@ -18,11 +18,15 @@ private:
     int target_arcsec;
     int delta;
     int remains_steps;
+    int axis_type;
 
 
 public:
-    Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[]);
+    Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type);
     ~Axis();
+
+    static const int AXIS_TYPE_RA   = 0;
+    static const int AXIS_TYPE_DEC  = 1;
 
     int GoTo_arcsec(int arcsec);
     int GoTo_degree(double degree);
