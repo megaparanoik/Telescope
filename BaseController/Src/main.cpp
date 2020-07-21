@@ -112,12 +112,15 @@ int main(void)
 	RA_axis  = new Axis(&htim2, RA_Motor_pins, Axis::AXIS_TYPE_RA);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins, Axis::AXIS_TYPE_DEC);
 
-	while(1) {	
-		DEC_axis->GoTo_arcsec(10000);
-		LL_mDelay(5000);
+	LL_mDelay(5000);
+	RA_axis->GoTo(45, 0, 0);
 
-		DEC_axis->GoTo_arcsec(20000);
-		LL_mDelay(5000);
+	while(1) {	
+		//DEC_axis->GoTo_arcsec(10000);
+		//LL_mDelay(5000);
+
+		//DEC_axis->GoTo_arcsec(20000);
+		//LL_mDelay(5000);
 
 		//DEC_axis->GoTo_arcsec(50000);
 		//LL_mDelay(5000);	

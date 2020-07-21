@@ -28,8 +28,9 @@ public:
     static const int AXIS_TYPE_RA   = 0;
     static const int AXIS_TYPE_DEC  = 1;
 
-    int GoTo_arcsec(int arcsec);
-    int GoTo_degree(double degree);
+    int GoTo(int arcsec);
+    int GoTo(int degree, int minutes, int sec);
+    int GoTo(double degree);
     int Start();
     int Stop();
     int TimerInterrupt();

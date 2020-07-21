@@ -24,7 +24,7 @@ Axis::~Axis()
 {
 }
 
-int Axis::GoTo_arcsec(int arcsec)
+int Axis::GoTo(int arcsec)
 {
     Logger &logger = Logger::GetInstance();
 
@@ -63,7 +63,14 @@ int Axis::GoTo_arcsec(int arcsec)
     return 0;
 }
 
-int Axis::GoTo_degree(double degree)
+int Axis::GoTo(int degree, int minutes, int sec)
+{
+    int arcsec = (degree * 60 * 60) + (minutes * 60) + sec;
+    GoTo(arcsec);
+    return 0;
+}
+
+int Axis::GoTo(double degree)
 {
 
     return 0;
