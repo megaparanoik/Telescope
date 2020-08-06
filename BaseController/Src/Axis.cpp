@@ -26,14 +26,14 @@ Axis::~Axis()
 
 int Axis::GoTo(int arcsec)
 {
-    Logger &logger = Logger::GetInstance();
+    //Logger &logger = Logger::GetInstance();
 
-    logger.write("Goto %d arces", arcsec);
+    //logger.write("Goto %d arces", arcsec);
 
     target_arcsec = arcsec;
     delta = current_arcsec - target_arcsec;
 
-    logger.write("Delta: %d", delta);
+    //logger.write("Delta: %d", delta);
 
     if (delta > 0) {
         axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
@@ -45,14 +45,14 @@ int Axis::GoTo(int arcsec)
 
     remains_steps = delta / axis_motor->GetResolution();
 
-    logger.write("Remains steps: %d", remains_steps);
+    //logger.write("Remains steps: %d", remains_steps);
 
     if (remains_steps < 0) {
         remains_steps *= -1;
     }
     remains_steps *= 2;
 
-    logger.write("Remains steps: %d", remains_steps);
+    //logger.write("Remains steps: %d", remains_steps);
 
     if (remains_steps != 0) {
         //Set_timer_speed(axis_timer, TIMER_TRACKING_SPEED);

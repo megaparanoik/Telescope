@@ -9,6 +9,8 @@
 #include "Axis.hpp"
 #include "IMotorDriver.hpp"
 #include "Logger.hpp"
+#include "RingBuff.hpp"
+#include <cstdio>
 
 static int STARRY_DAY           = 86164;	//86164,090530833 sec
 static int MOTOR_STEPS_PER_REV  = 200;    	//360/1.8deg = 200 steps
@@ -28,7 +30,17 @@ Axis *DEC_axis;
 struct ControlPin RA_Motor_pins[MAX_control_pin] = {0};
 struct ControlPin DEC_Motor_pins[MAX_control_pin] = {0};
 
+RingBuff<uint8_t> *ring;
+uint8_t buff[2] = {0};
+
+void Parse(uint8_t *command);
 void SystemClock_Config(void);
+void Send_RA_DEC();
+void Set_RA_DEC(unsigned int RA, unsigned int DEC);
+void Send_Confirmation();
+
+unsigned int RA = 0x34AB0500;
+unsigned int DEC = 0x12CE0500;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -57,6 +69,16 @@ void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
     }
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if(huart == &huart3) {
+		if (ring) {
+			ring->Push(buff[0]);
+			HAL_UART_Receive_IT(&huart3, (uint8_t*)buff, 1);
+		}
+    }
+}
+
 int main(void)
 {
 	
@@ -68,11 +90,25 @@ int main(void)
 	MX_DMA_Init();
 	MX_USART3_UART_Init();
 
-	Logger &logger = Logger::GetInstance();
-	logger.Init(&huart3);
+	ring  = new RingBuff<uint8_t>(250);
+
+	HAL_UART_Receive_IT(&huart3, (uint8_t*)buff, 1);
+
+	while (1)
+	{
+		uint8_t buff = 0;
+		LL_mDelay(1000);
+
+		if(ring->Peek(&buff) != 0) {
+			Parse(&buff);
+		}
+	}
+	
 
 
-	logger.Write("Telescope App");
+	//Logger &logger = Logger::GetInstance();
+	//logger.Init(&huart3);
+	//logger.Write("Telescope App");
 
 	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
@@ -112,8 +148,11 @@ int main(void)
 	RA_axis  = new Axis(&htim2, RA_Motor_pins, Axis::AXIS_TYPE_RA);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins, Axis::AXIS_TYPE_DEC);
 
-	LL_mDelay(5000);
-	RA_axis->GoTo(45, 0, 0);
+
+	
+
+	//LL_mDelay(5000);
+	//RA_axis->GoTo(45, 0, 0);
 
 	while(1) {	
 		//DEC_axis->GoTo_arcsec(10000);
@@ -126,6 +165,61 @@ int main(void)
 		//LL_mDelay(5000);	
   	}
 }
+
+void Send_RA_DEC()
+{
+	char buffer[100] = {0};
+	snprintf(buffer, 100, "%08X,%08X#", RA, DEC);
+	HAL_UART_Transmit(&huart3, (uint8_t *)buffer, strlen(buffer), 1000);
+}
+
+void Set_RA_DEC(unsigned int ra, unsigned int dec)
+{
+	RA = ra;
+	DEC = dec;
+}
+
+void Send_Confirmation()
+{
+	char buffer[100] = {0};
+	snprintf(buffer, 100, "#");
+	HAL_UART_Transmit(&huart3, (uint8_t *)buffer, strlen(buffer), 1000);
+}
+
+void Parse(uint8_t *command)
+{
+	uint8_t buffer[100] = {0};
+	unsigned int RA = 0;
+	unsigned int DEC = 0;
+
+	switch (*command)
+	{
+	case 'e':
+		ring->Pop(buffer, 1);
+		Send_RA_DEC();
+		break;
+	case 's':
+		ring->Pop(buffer, 18);
+		sscanf((char*)buffer, "s%8x,%8x", &RA, &DEC);
+		Set_RA_DEC(RA, DEC);
+		LL_mDelay(10);
+		Send_Confirmation();
+		break;
+
+	case 'r':
+		ring->Pop(buffer, 18);
+		sscanf((char*)buffer, "r%8x,%8x", &RA, &DEC);
+		Set_RA_DEC(RA, DEC);
+		LL_mDelay(10);
+		Send_Confirmation();
+		break;
+	
+	default:
+		LL_mDelay(10);
+		break;
+	}
+}
+
 
 void SystemClock_Config(void)
 {
