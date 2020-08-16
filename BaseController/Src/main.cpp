@@ -81,7 +81,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 int main(void)
 {
-	
   	HAL_Init();
   	SystemClock_Config();
   	MX_GPIO_Init();
@@ -89,26 +88,6 @@ int main(void)
 	MX_TIM3_Init();
 	MX_DMA_Init();
 	MX_USART3_UART_Init();
-
-	ring  = new RingBuff<uint8_t>(250);
-
-	HAL_UART_Receive_IT(&huart3, (uint8_t*)buff, 1);
-
-	while (1)
-	{
-		uint8_t buff = 0;
-		LL_mDelay(1000);
-
-		if(ring->Peek(&buff) != 0) {
-			Parse(&buff);
-		}
-	}
-	
-
-
-	//Logger &logger = Logger::GetInstance();
-	//logger.Init(&huart3);
-	//logger.Write("Telescope App");
 
 	RA_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	RA_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_15;
@@ -127,7 +106,6 @@ int main(void)
 	RA_Motor_pins[M2_control_pin].PORT 		= GPIOA;
 	RA_Motor_pins[M2_control_pin].PIN 		= GPIO_PIN_8;
 
-	
 	DEC_Motor_pins[RESET_control_pin].PORT 	= GPIOB;
 	DEC_Motor_pins[RESET_control_pin].PIN 	= GPIO_PIN_4;
 	DEC_Motor_pins[SLEEP_control_pin].PORT 	= GPIOB;
@@ -148,35 +126,26 @@ int main(void)
 	RA_axis  = new Axis(&htim2, RA_Motor_pins, Axis::AXIS_TYPE_RA);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins, Axis::AXIS_TYPE_DEC);
 
+	ring  = new RingBuff<uint8_t>(100);
+	HAL_UART_Receive_IT(&huart3, (uint8_t*)buff, 1);
+
+
+	RA_axis->SetCurentPosition(50);
+	DEC_axis->SetCurentPosition(10);
+
+	while (1)
+	{
+		LL_mDelay(1000);
+
+		uint8_t buff = 0;
+		if(ring->Peek(&buff) != 0) {
+			Parse(&buff);
+		}
+	}
 
 	
-
-	//LL_mDelay(5000);
-	//RA_axis->GoTo(45, 0, 0);
-
 	while(1) {	
-		//DEC_axis->GoTo_arcsec(10000);
-		//LL_mDelay(5000);
-
-		//DEC_axis->GoTo_arcsec(20000);
-		//LL_mDelay(5000);
-
-		//DEC_axis->GoTo_arcsec(50000);
-		//LL_mDelay(5000);	
   	}
-}
-
-void Send_RA_DEC()
-{
-	char buffer[100] = {0};
-	snprintf(buffer, 100, "%08X,%08X#", RA, DEC);
-	HAL_UART_Transmit(&huart3, (uint8_t *)buffer, strlen(buffer), 1000);
-}
-
-void Set_RA_DEC(unsigned int ra, unsigned int dec)
-{
-	RA = ra;
-	DEC = dec;
 }
 
 void Send_Confirmation()
@@ -194,23 +163,32 @@ void Parse(uint8_t *command)
 
 	switch (*command)
 	{
+	//Get precise RA/DEC
 	case 'e':
 		ring->Pop(buffer, 1);
-		Send_RA_DEC();
+
+		RA = (RA_axis->GetCurrentPosition() / 360) * 4294967296;
+		DEC = (DEC_axis->GetCurrentPosition() / 360) * 4294967296;
+		snprintf((char *)buffer, 100, "%08X,%08X#", RA, DEC);
+		HAL_UART_Transmit(&huart3, (uint8_t *)buffer, strlen((char *)buffer), 1000);
 		break;
+
+	//Sync precise RA/DEC
 	case 's':
 		ring->Pop(buffer, 18);
+		
 		sscanf((char*)buffer, "s%8x,%8x", &RA, &DEC);
-		Set_RA_DEC(RA, DEC);
-		LL_mDelay(10);
+		RA_axis->SetCurentPosition(((double)RA/4294967296)*360);
+		DEC_axis->SetCurentPosition(((double)DEC/4294967296)*360);
 		Send_Confirmation();
 		break;
 
+	//Goto precise RA/DEC
 	case 'r':
 		ring->Pop(buffer, 18);
 		sscanf((char*)buffer, "r%8x,%8x", &RA, &DEC);
-		Set_RA_DEC(RA, DEC);
-		LL_mDelay(10);
+		RA_axis->GoTo(((double)RA/4294967296)*360);
+		DEC_axis->GoTo(((double)DEC/4294967296)*360);
 		Send_Confirmation();
 		break;
 	
