@@ -1,5 +1,6 @@
 #include "Axis.hpp"
 #include "Logger.hpp"
+#include "math.h"
 
 Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
 {
@@ -14,64 +15,44 @@ Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
     axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
     axis_motor->SetSleepMode(IMotorDriver::SLEEP_MODE_WAKE);
 
-    current_arcsec  = 0;
+    current_degree  = 45;
+    target_degree   = 0;
     delta           = 0;
     remains_steps   = 0;
-    target_arcsec   = 0;
+
+    unsigned int motor_rev_per_axis_rev;
+    if (axis_type == AXIS_TYPE_RA) {
+        motor_rev_per_axis_rev = RA_AXIS_RATIO * GEARBOX_RATIO;
+    } else if (axis_type == AXIS_TYPE_DEC) {
+        motor_rev_per_axis_rev = DEC_AXIS_RATIO * GEARBOX_RATIO;
+    }
+    resolution = (double)DEGRE_PER_AXIS_REV/(motor_rev_per_axis_rev * (MOTOR_FULL_STEPS * 32));
 }
 
 Axis::~Axis()
 {
 }
 
-int Axis::GoTo(int arcsec)
-{
-    //Logger &logger = Logger::GetInstance();
-
-    //logger.write("Goto %d arces", arcsec);
-
-    target_arcsec = arcsec;
-    delta = current_arcsec - target_arcsec;
-
-    //logger.write("Delta: %d", delta);
-
-    if (delta > 0) {
-        axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
-    } else if (delta < 0) {
-        axis_motor->SetDirection(IMotorDriver::DIRECTION_CLOCKWISE);
-    } else {
-        return 0;
-    }
-
-    remains_steps = delta / axis_motor->GetResolution();
-
-    //logger.write("Remains steps: %d", remains_steps);
-
-    if (remains_steps < 0) {
-        remains_steps *= -1;
-    }
-    remains_steps *= 2;
-
-    //logger.write("Remains steps: %d", remains_steps);
-
-    if (remains_steps != 0) {
-        //Set_timer_speed(axis_timer, TIMER_TRACKING_SPEED);
-        Set_timer_speed(axis_timer, TIMER_MOVE_SPEED);
-        Start();
-    }
-
-    return 0;
-}
-
-int Axis::GoTo(int degree, int minutes, int sec)
-{
-    int arcsec = (degree * 60 * 60) + (minutes * 60) + sec;
-    GoTo(arcsec);
-    return 0;
-}
-
 int Axis::GoTo(double degree)
 {
+    Stop();
+    target_degree = degree;
+
+    if (fabs(target_degree - current_degree) < resolution) {
+        return 0;
+    }
+    
+    //Set direction
+    if ((target_degree - current_degree) > 0) {
+        movement_direction = IMotorDriver::DIRECTION_COUNTERCLOCKWISE;
+        axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
+    } else {
+        movement_direction = IMotorDriver::DIRECTION_CLOCKWISE;
+        axis_motor->SetDirection(IMotorDriver::DIRECTION_CLOCKWISE);
+    }
+
+    Set_timer_speed(axis_timer, TIMER_MOVE_SPEED);
+    Start();
 
     return 0;
 }
@@ -92,12 +73,35 @@ int Axis::Stop()
 
 int Axis::TimerInterrupt()
 {
-    if (remains_steps > 0) {
-        remains_steps--;
-        axis_motor->ToggleStepPin();
-    } else {
-        current_arcsec = target_arcsec;
+    static uint8_t toggle_var = 0;
+
+    toggle_var = !toggle_var;
+
+    if (toggle_var) {
+        if (movement_direction == IMotorDriver::DIRECTION_COUNTERCLOCKWISE) {
+            current_degree += resolution;
+        } else {
+            current_degree -= resolution;
+        }
+    }
+
+    if (fabs(current_degree - target_degree)  < resolution) {
+        toggle_var = 0;
         Stop();
     }
+
+    axis_motor->ToggleStepPin();
+
+    return 0;
+}
+
+double Axis::GetCurrentPosition()
+{
+    return current_degree;
+}
+
+int Axis::SetCurentPosition(double degree)
+{
+    current_degree = degree;
     return 0;
 }
