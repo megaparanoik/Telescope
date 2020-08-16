@@ -17,8 +17,7 @@ Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
 
     current_degree  = 45;
     target_degree   = 0;
-    delta           = 0;
-    remains_steps   = 0;
+    toggle_var = 0;
 
     unsigned int motor_rev_per_axis_rev;
     if (axis_type == AXIS_TYPE_RA) {
@@ -73,8 +72,6 @@ int Axis::Stop()
 
 int Axis::TimerInterrupt()
 {
-    static uint8_t toggle_var = 0;
-
     toggle_var = !toggle_var;
 
     if (toggle_var) {

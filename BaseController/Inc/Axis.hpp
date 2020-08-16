@@ -23,6 +23,7 @@ private:
     int remains_steps;
     int axis_type;
     int movement_direction;
+    int toggle_var;
 
 
 public:
