@@ -9,7 +9,6 @@ class drv8825 : public IMotorDriver
 {
 private:
     struct ControlPin Motor_pins[MAX_control_pin];
-    double resolution = 0.7788461538;
     int InitPortOutput(GPIO_TypeDef *port, uint16_t pins);
 
 public:
@@ -26,7 +25,6 @@ public:
     int doStep();
     int doStep(int ms_delay);
     int ToggleStepPin();
-    double GetResolution();
 };
 
 

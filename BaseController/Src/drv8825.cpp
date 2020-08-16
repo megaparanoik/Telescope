@@ -195,8 +195,3 @@ int drv8825::ToggleStepPin()
     HAL_GPIO_TogglePin(Motor_pins[STEP_control_pin].PORT, Motor_pins[STEP_control_pin].PIN);
     return 0;
 }
-
-double drv8825::GetResolution()
-{
-    return resolution;
-}

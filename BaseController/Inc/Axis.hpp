@@ -19,8 +19,6 @@ private:
 
     double current_degree;
     double target_degree;
-    double delta;
-    int remains_steps;
     int axis_type;
     int movement_direction;
     int toggle_var;

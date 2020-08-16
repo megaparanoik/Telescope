@@ -35,26 +35,19 @@ uint8_t buff[2] = {0};
 
 void Parse(uint8_t *command);
 void SystemClock_Config(void);
-void Send_RA_DEC();
-void Set_RA_DEC(unsigned int RA, unsigned int DEC);
 void Send_Confirmation();
-
-unsigned int RA = 0x34AB0500;
-unsigned int DEC = 0x12CE0500;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	
-
-	if(htim->Instance == TIM2) {
+	if (htim->Instance == TIM2) {
     	if (RA_axis) {
       		RA_axis->TimerInterrupt();
-    	}	
-  	} else if(htim->Instance == TIM3) {
+    	}
+  	} else if (htim->Instance == TIM3) {
     	if (DEC_axis) {
       		DEC_axis->TimerInterrupt();
     	}	
-  	} 
+  	}
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -125,13 +118,12 @@ int main(void)
 
 	RA_axis  = new Axis(&htim2, RA_Motor_pins, Axis::AXIS_TYPE_RA);
 	DEC_axis = new Axis(&htim3, DEC_Motor_pins, Axis::AXIS_TYPE_DEC);
+	
+	RA_axis->SetCurentPosition(0);
+	DEC_axis->SetCurentPosition(0);
 
 	ring  = new RingBuff<uint8_t>(100);
 	HAL_UART_Receive_IT(&huart3, (uint8_t*)buff, 1);
-
-
-	RA_axis->SetCurentPosition(50);
-	DEC_axis->SetCurentPosition(10);
 
 	while (1)
 	{
@@ -142,16 +134,12 @@ int main(void)
 			Parse(&buff);
 		}
 	}
-
-	
-	while(1) {	
-  	}
 }
 
 void Send_Confirmation()
 {
-	char buffer[100] = {0};
-	snprintf(buffer, 100, "#");
+	char buffer[2] = {0};
+	snprintf(buffer, 2, "#");
 	HAL_UART_Transmit(&huart3, (uint8_t *)buffer, strlen(buffer), 1000);
 }
 
@@ -178,8 +166,8 @@ void Parse(uint8_t *command)
 		ring->Pop(buffer, 18);
 		
 		sscanf((char*)buffer, "s%8x,%8x", &RA, &DEC);
-		RA_axis->SetCurentPosition(((double)RA/4294967296)*360);
-		DEC_axis->SetCurentPosition(((double)DEC/4294967296)*360);
+		RA_axis->SetCurentPosition(((double)RA / 4294967296) * 360);
+		DEC_axis->SetCurentPosition(((double)DEC / 4294967296) * 360);
 		Send_Confirmation();
 		break;
 
@@ -187,8 +175,8 @@ void Parse(uint8_t *command)
 	case 'r':
 		ring->Pop(buffer, 18);
 		sscanf((char*)buffer, "r%8x,%8x", &RA, &DEC);
-		RA_axis->GoTo(((double)RA/4294967296)*360);
-		DEC_axis->GoTo(((double)DEC/4294967296)*360);
+		RA_axis->GoTo(((double)RA / 4294967296) * 360);
+		DEC_axis->GoTo(((double)DEC / 4294967296) * 360);
 		Send_Confirmation();
 		break;
 	
@@ -197,7 +185,6 @@ void Parse(uint8_t *command)
 		break;
 	}
 }
-
 
 void SystemClock_Config(void)
 {

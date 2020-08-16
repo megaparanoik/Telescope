@@ -69,6 +69,5 @@ public:
     virtual int doStep() = 0;
     virtual int doStep(int ms_delay) = 0;
     virtual int ToggleStepPin() = 0;
-    virtual double GetResolution() = 0;
 };
 

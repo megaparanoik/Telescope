@@ -15,7 +15,7 @@ Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
     axis_motor->SetDirection(IMotorDriver::DIRECTION_COUNTERCLOCKWISE);
     axis_motor->SetSleepMode(IMotorDriver::SLEEP_MODE_WAKE);
 
-    current_degree  = 45;
+    current_degree  = 0;
     target_degree   = 0;
     toggle_var = 0;
 
@@ -25,7 +25,7 @@ Axis::Axis(TIM_HandleTypeDef *timer, struct ControlPin pins[], int axis_type)
     } else if (axis_type == AXIS_TYPE_DEC) {
         motor_rev_per_axis_rev = DEC_AXIS_RATIO * GEARBOX_RATIO;
     }
-    resolution = (double)DEGRE_PER_AXIS_REV/(motor_rev_per_axis_rev * (MOTOR_FULL_STEPS * 32));
+    resolution = (double)DEGRE_PER_AXIS_REV/(motor_rev_per_axis_rev * (MOTOR_FULL_STEPS * IMotorDriver::STEP_1_32));
 }
 
 Axis::~Axis()
